@@ -1,0 +1,4 @@
+# Idea specific
+.idea
+.idea_modules
+onboarding-api.iml
