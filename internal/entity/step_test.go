@@ -2,7 +2,6 @@ package entity
 
 import (
 	"github.com/stretchr/testify/assert"
-	_ "github.com/stretchr/testify/assert"
 	"testing"
 )
 
