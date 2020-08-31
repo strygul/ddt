@@ -3,6 +3,6 @@ package entity
 import "net/http"
 
 type Executor struct {
-	Path Path
+	Path   Path
 	Client http.Client
 }

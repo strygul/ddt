@@ -2,8 +2,11 @@ package entity
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"github.com/buger/jsonparser"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -15,8 +18,8 @@ type Step struct {
 	Headers      map[string]string
 	Body         string
 	Placeholders map[string]string
-	JsonPath	string
-	Next 		*Step
+	JsonPath     string
+	Next         *Step
 }
 
 func (s Step) SetNext(step *Step) {
@@ -27,7 +30,23 @@ func (s Step) parseJsonPath() []string {
 	return strings.Split(s.JsonPath, ".")
 }
 
-func (s Step) GetRequest()(*http.Request, error) {
+func AccessResponseBodyByJsonPath(responseBody io.ReadCloser, path []string) (string, error) {
+	bytes, err := ioutil.ReadAll(responseBody)
+	get, dataType, _, err := jsonparser.Get(bytes, path...)
+	if err != nil {
+		return "", err
+	}
+	switch dataType {
+	case jsonparser.String:
+		return string(get), nil
+	case jsonparser.Object:
+		return string(get), nil
+	default:
+		return "", errors.New("Could not parse data: unknow data type")
+	}
+}
+
+func (s Step) GetRequest() (*http.Request, error) {
 	body := bytes.NewReader([]byte(s.resolvePlaceholders(s.Body)))
 	url := s.resolvePlaceholders(s.Url)
 	req, err := http.NewRequest(s.Method, url, body)
