@@ -7,10 +7,18 @@ import (
 	"net/http"
 	"time"
 )
+
 func main() {
 	fmt.Println("hello world")
 	emptyMap := make(map[string]string)
-	step := entity.Step{Url: "https://webhook.site/1495182d-0096-47b9-b369-8e8536c0cde1", Method: "GET", Headers: emptyMap, Body: "testing", Placeholders: emptyMap}
+	step := entity.Step{
+		Url:          "https://webhook.site/1495182d-0096-47b9-b369-8e8536c0cde1",
+		Method:       "GET",
+		Headers:      emptyMap,
+		Body:         "testing",
+		Placeholders: emptyMap,
+	}
+	step.ExecuteRequest()
 	request, err := step.GetRequest()
 	if err != nil {
 		println(err.Error())

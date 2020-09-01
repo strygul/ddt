@@ -28,3 +28,7 @@ func TestAccessResponseBodyByJsonPath(t *testing.T) {
 	assert.Nil(t, err, "Should be no errors")
 	assert.Equal(t, "targetString", obj, "parsed string should be equal to the target")
 }
+
+func TestStepExecution(t *testing.T) {
+
+}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/buger/jsonparser"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -30,6 +31,7 @@ func (s Step) parseJsonPath() []string {
 	return strings.Split(s.JsonPath, ".")
 }
 
+//finish different types
 func AccessResponseBodyByJsonPath(responseBody io.ReadCloser, path []string) (string, error) {
 	bytes, err := ioutil.ReadAll(responseBody)
 	get, dataType, _, err := jsonparser.Get(bytes, path...)
@@ -42,7 +44,7 @@ func AccessResponseBodyByJsonPath(responseBody io.ReadCloser, path []string) (st
 	case jsonparser.Object:
 		return string(get), nil
 	default:
-		return "", errors.New("Could not parse data: unknow data type")
+		return "", errors.New("Could not parse data: unknown data type")
 	}
 }
 
@@ -62,6 +64,7 @@ func (s Step) GetRequest() (*http.Request, error) {
 func (s Step) ExecuteRequest() (io.ReadCloser, error) {
 	request, err := s.GetRequest()
 	if err != nil {
+		log.Error("Could not execute step request. Message: " + err.Error())
 		return nil, err
 	}
 	timeout := 5 * time.Second
