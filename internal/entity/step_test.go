@@ -9,13 +9,16 @@ import (
 )
 
 func TestParsingOfPlaceholders(t *testing.T) {
-	s := Step{"",
+	s := Step{
+		"",
 		"",
 		map[string]string{},
 		"",
 		map[string]string{"piggy's name": "Naf Naf", "what does piggy say": "oink"},
 		"",
-		nil}
+		nil,
+		nil,
+	}
 
 	result := s.resolvePlaceholders("And then {piggy's name} said, `{what does piggy say}`.")
 	assert.Equal(t, "And then Naf Naf said, `oink`.", result)

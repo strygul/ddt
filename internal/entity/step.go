@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/buger/jsonparser"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,18 +12,71 @@ import (
 	"time"
 )
 
+type HttpMethod string
+
+const (
+	get     = "GET"
+	Get     = HttpMethod(get)
+	head    = "HEAD"
+	Head    = HttpMethod(head)
+	post    = "POST"
+	Post    = HttpMethod(post)
+	put     = "PUT"
+	Put     = HttpMethod(put)
+	delete  = "DELETE"
+	Delete  = HttpMethod(delete)
+	connect = "CONNECT"
+	Connect = HttpMethod(connect)
+	options = "OPTIONS"
+	Options = HttpMethod(options)
+	trace   = "TRACE"
+	Trace   = HttpMethod(trace)
+	patch   = "PATCH"
+	Patch   = HttpMethod(patch)
+)
+
+func (hm HttpMethod) String() string {
+	switch hm {
+	case Get:
+		return get
+	case Head:
+		return head
+	case Post:
+		return post
+	case Put:
+		return put
+	case Delete:
+		return delete
+	case Connect:
+		return connect
+	case Options:
+		return options
+	case Trace:
+		return trace
+	case Patch:
+		return patch
+	default:
+		return "unknown"
+	}
+}
+
 type Step struct {
 	Url          string
-	Method       string
+	Method       HttpMethod
 	Headers      map[string]string
 	Body         string
 	Placeholders map[string]string
 	JsonPath     string
-	Next         *Step
+	next         *Step
+	client       *http.Client
+}
+
+func (s Step) SetClient(c *http.Client) {
+	s.client = c
 }
 
 func (s Step) SetNext(step *Step) {
-	s.Next = step
+	s.next = step
 }
 
 func (s Step) parseJsonPath() []string {
@@ -48,30 +100,44 @@ func AccessResponseBodyByJsonPath(responseBody io.ReadCloser, path []string) (st
 	}
 }
 
-func (s Step) GetRequest() (*http.Request, error) {
-	body := bytes.NewReader([]byte(s.resolvePlaceholders(s.Body)))
+func (s Step) ConstructRequest() (*http.Request, error) {
+	body := s.serializeResolvedBody()
 	url := s.resolvePlaceholders(s.Url)
-	req, err := http.NewRequest(s.Method, url, body)
+	req, err := http.NewRequest(s.Method.String(), url, body)
 	if err != nil {
 		return nil, err
 	}
-	for k, v := range s.Headers {
-		req.Header.Set(k, v)
-	}
+	s.addHeaders(req)
 	return req, nil
 }
 
+func (s Step) addHeaders(req *http.Request) {
+	for k, v := range s.Headers {
+		req.Header.Set(k, v)
+	}
+}
+
+func (s Step) serializeResolvedBody() *bytes.Reader {
+	return bytes.NewReader([]byte(s.resolvePlaceholders(s.Body)))
+}
+
 func (s Step) ExecuteRequest() (io.ReadCloser, error) {
-	request, err := s.GetRequest()
+	request, err := s.ConstructRequest()
 	if err != nil {
-		log.Error("Could not execute step request. Message: " + err.Error())
 		return nil, err
 	}
-	timeout := 5 * time.Second
-	client := http.Client{Timeout: timeout}
-	do, err := client.Do(request)
+	if s.client == nil {
+		s.client = s.defaultClient()
+	}
+	do, err := s.client.Do(request)
 	defer do.Body.Close()
 	return do.Body, nil
+}
+
+func (s Step) defaultClient() *http.Client {
+	timeout := 5 * time.Second
+	return &http.Client{Timeout: timeout}
+
 }
 
 func (s Step) resolvePlaceholders(str string) string {
