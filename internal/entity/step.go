@@ -68,14 +68,18 @@ type Step struct {
 	Placeholders map[string]string
 	JsonPath     string
 	next         *Step
-	client       *http.Client
+	client       Doer // e.g. a net/*http.Client to use for requests
 }
 
-func (s Step) SetClient(c *http.Client) {
+type Doer interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
+func (s *Step) SetClient(c Doer) {
 	s.client = c
 }
 
-func (s Step) SetNext(step *Step) {
+func (s *Step) SetNext(step *Step) {
 	s.next = step
 }
 
@@ -83,7 +87,7 @@ func (s Step) parseJsonPath() []string {
 	return strings.Split(s.JsonPath, ".")
 }
 
-//finish different types
+//TODO finish different types
 func AccessResponseBodyByJsonPath(responseBody io.ReadCloser, path []string) (string, error) {
 	bytes, err := ioutil.ReadAll(responseBody)
 	get, dataType, _, err := jsonparser.Get(bytes, path...)
@@ -121,7 +125,7 @@ func (s Step) serializeResolvedBody() *bytes.Reader {
 	return bytes.NewReader([]byte(s.resolvePlaceholders(s.Body)))
 }
 
-func (s Step) ExecuteRequest() (io.ReadCloser, error) {
+func (s Step) ExecuteRequest() ([]byte, error) {
 	request, err := s.ConstructRequest()
 	if err != nil {
 		return nil, err
@@ -130,8 +134,9 @@ func (s Step) ExecuteRequest() (io.ReadCloser, error) {
 		s.client = s.defaultClient()
 	}
 	do, err := s.client.Do(request)
-	defer do.Body.Close()
-	return do.Body, nil
+	body := do.Body
+	defer body.Close()
+	return ioutil.ReadAll(body)
 }
 
 func (s Step) defaultClient() *http.Client {
@@ -142,7 +147,7 @@ func (s Step) defaultClient() *http.Client {
 
 func (s Step) resolvePlaceholders(str string) string {
 	for k, v := range s.Placeholders {
-		str = strings.ReplaceAll(str, fmt.Sprintf("{%s}", k), v)
+		str = strings.ReplaceAll(str, fmt.Sprintf("{{%s}}", k), v)
 	}
 	return str
 }
