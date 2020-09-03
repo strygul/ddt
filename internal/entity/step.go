@@ -147,7 +147,8 @@ func (s Step) defaultClient() *http.Client {
 
 func (s Step) resolvePlaceholders(str string) string {
 	for k, v := range s.Placeholders {
-		str = strings.ReplaceAll(str, fmt.Sprintf("{{%s}}", k), v)
+		strToReplace := fmt.Sprintf("{{%s}}", k)
+		str = strings.ReplaceAll(str, strToReplace, v)
 	}
 	return str
 }
