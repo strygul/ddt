@@ -67,6 +67,7 @@ type Step struct {
 	Body         string
 	Placeholders map[string]string
 	JsonPath     string
+	Description  string
 	next         *Step
 	client       Doer // e.g. a net/*http.Client to use for requests
 }

@@ -14,6 +14,7 @@ func main() {
 		Headers:      emptyMap,
 		Body:         "testing",
 		Placeholders: emptyMap,
+		Description:  "some description of what the step does",
 		JsonPath:     "",
 	}
 	step.ExecuteRequest()

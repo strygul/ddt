@@ -18,6 +18,7 @@ func TestParsingOfPlaceholders(t *testing.T) {
 		"",
 		map[string]string{"piggy's name": "Naf Naf", "what does piggy say": "oink"},
 		"",
+		"",
 		nil,
 		nil,
 	}
@@ -63,3 +64,21 @@ func TestStepExecution(t *testing.T) {
 	assert.NoError(t, err, "Should be no error")
 	assert.Equal(t, "The placeholder should be replaced: bar", string(r))
 }
+
+//func TestCascadingStepExecution(t *testing.T) {
+//	placeholders := make(map[string]string)
+//	placeholders["foo"] = "bar"
+//	body := "The placeholder should be replaced: {{foo}}"
+//	step := Step{
+//		Url:          "https://webhook.site/1b127957-0d09-4447-a754-2c3c56ca351e",
+//		Method:       Get,
+//		Headers:      make(map[string]string),
+//		Body:         body,
+//		Placeholders: placeholders,
+//		JsonPath:     "",
+//	}
+//	step.SetClient(&HttpClientMock{})
+//	r, err := step.ExecuteRequest()
+//	assert.NoError(t, err, "Should be no error")
+//	assert.Equal(t, "The placeholder should be replaced: bar", string(r))
+//}
