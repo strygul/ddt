@@ -13,3 +13,9 @@ func (p *Path) AddStep(s *Step) {
 	}
 	p.steps = append(p.steps, s)
 }
+
+func (p *Path) Execute() {
+	for _, s := range p.steps {
+		response, err := s.ExecuteRequest()
+	}
+}

@@ -135,6 +135,9 @@ func (s Step) ExecuteRequest() ([]byte, error) {
 		s.client = s.defaultClient()
 	}
 	do, err := s.client.Do(request)
+	if err != nil {
+		return nil, err
+	}
 	body := do.Body
 	defer body.Close()
 	return ioutil.ReadAll(body)

@@ -1,17 +1,5 @@
 package main
 
-import (
-	"net/http"
-)
-
-func HelloServer(w http.ResponseWriter, r *http.Request) {
-	// create response binary data
-	data := []byte(`{"foo": "bar"}`) // slice of bytes
-	// write `data` to response
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(data)
-}
-
 func main() {
 	//fmt.Println("hello world")
 	//emptyMap := make(map[string]string)
@@ -25,11 +13,6 @@ func main() {
 	//	JsonPath:     "",
 	//}
 	//step.ExecuteRequest()
-
-	m := http.NewServeMux()
-	s := http.Server{Addr: ":8000", Handler: m}
-	m.HandleFunc("/", HelloServer)
-	s.ListenAndServe()
 
 	//
 	//request, err := step.ConstructRequest()
