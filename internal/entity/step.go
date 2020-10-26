@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/buger/jsonparser"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -60,16 +59,24 @@ func (hm HttpMethod) String() string {
 	}
 }
 
+type JsonPath string
+
+func (p JsonPath) Split() []string {
+	return strings.Split(string(p), ".")
+}
+
+type PlaceholderName = string
+
 type Step struct {
-	Url          string
-	Method       HttpMethod
-	Headers      map[string]string
-	Body         string
-	Placeholders map[string]string
-	JsonPath     string
-	Description  string
-	next         *Step
-	client       Doer // e.g. a net/*http.Client to use for requests
+	Url                   string
+	Method                HttpMethod
+	Headers               map[string]string
+	Body                  string
+	Placeholders          map[PlaceholderName]string
+	PlaceholderNameToPath map[PlaceholderName]JsonPath
+	Description           string
+	next                  *Step
+	client                Doer // e.g. a net/*http.Client to use for requests
 }
 
 type Doer interface {
@@ -84,14 +91,9 @@ func (s *Step) SetNext(step *Step) {
 	s.next = step
 }
 
-func (s Step) parseJsonPath() []string {
-	return strings.Split(s.JsonPath, ".")
-}
-
 //TODO finish different types
-func AccessResponseBodyByJsonPath(responseBody io.ReadCloser, path []string) (string, error) {
-	bytes, err := ioutil.ReadAll(responseBody)
-	get, dataType, _, err := jsonparser.Get(bytes, path...)
+func AccessJsonByPath(jsonBytes []byte, path []string) (string, error) {
+	get, dataType, _, err := jsonparser.Get(jsonBytes, path...)
 	if err != nil {
 		return "", err
 	}

@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"bytes"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -17,7 +16,7 @@ func TestParsingOfPlaceholders(t *testing.T) {
 		map[string]string{},
 		"",
 		map[string]string{"piggy's name": "Naf Naf", "what does piggy say": "oink"},
-		"",
+		make(map[PlaceholderName]JsonPath),
 		"",
 		nil,
 		nil,
@@ -29,8 +28,7 @@ func TestParsingOfPlaceholders(t *testing.T) {
 
 func TestAccessResponseBodyByJsonPath(t *testing.T) {
 	json := "{\"foo\":  {\"bar\":  [{\"baz\":  \"targetString\"}]}}"
-	body := ioutil.NopCloser(bytes.NewReader([]byte(json)))
-	obj, err := AccessResponseBodyByJsonPath(body, strings.Split("foo.bar.[0].baz", "."))
+	obj, err := AccessJsonByPath([]byte(json), strings.Split("foo.bar.[0].baz", "."))
 	assert.Nil(t, err, "Should be no errors")
 	assert.Equal(t, "targetString", obj, "parsed string should be equal to the target")
 }
@@ -52,12 +50,12 @@ func TestStepExecution(t *testing.T) {
 	placeholders["foo"] = "bar"
 	body := "The placeholder should be replaced: {{foo}}"
 	step := Step{
-		Url:          "https://webhook.site/1b127957-0d09-4447-a754-2c3c56ca351e",
-		Method:       Get,
-		Headers:      make(map[string]string),
-		Body:         body,
-		Placeholders: placeholders,
-		JsonPath:     "",
+		Url:                   "https://webhook.site/1b127957-0d09-4447-a754-2c3c56ca351e",
+		Method:                Get,
+		Headers:               make(map[string]string),
+		Body:                  body,
+		Placeholders:          placeholders,
+		PlaceholderNameToPath: make(map[PlaceholderName]JsonPath),
 	}
 	step.SetClient(&HttpClientMock{})
 	r, err := step.ExecuteRequest()
