@@ -1,9 +1,15 @@
 package entity
 
+import (
+	"errors"
+	"fmt"
+)
+
 type Steps = []*Step
 
 type Path struct {
-	steps Steps
+	steps       Steps
+	failedSteps Steps
 }
 
 func (p *Path) AddStep(s *Step) {
@@ -14,8 +20,13 @@ func (p *Path) AddStep(s *Step) {
 	p.steps = append(p.steps, s)
 }
 
-func (p *Path) Execute() {
-	for _, s := range p.steps {
-		response, err := s.ExecuteRequest()
+func (p *Path) Execute() error {
+	for i, s := range p.steps {
+		_, err := s.ExecuteRequest()
+		if err != nil {
+			p.failedSteps = p.steps[i:len(p.steps)]
+			return errors.New(fmt.Sprintf("Could not execute the step #%d. Error: %s", i, err.Error()))
+		}
 	}
+	return nil
 }
